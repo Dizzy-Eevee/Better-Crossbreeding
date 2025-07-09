@@ -1,0 +1,166 @@
+<Patch>
+	<Operation Class="PatchOperationAddModExtension">
+		<xpath>Defs/PawnKindDef[defName="Chicken"]</xpath>
+		<value>
+			<li Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension">
+				<inheritanceTypeDictionary> <!--Determines which inherittance behaviour to use with which partner. Key is the father animal, value is the inheritance type.--> 
+					<li>
+						<key>Cat</key>
+						<value>Paternal</value> <!--Inherits father's race, in this case a cat.-->
+					</li>
+					<li>
+						<key>LabradorRetriever</key>
+						<value>Maternal</value> <!--Inherits mother's race, in this case a chicken.-->
+					</li>
+					<li>
+						<key>Thrumbo</key>
+						<value>Random</value> <!--Inherits either the father or mother's race on a coin flip. 50% Thrumbos, 50% chickens.-->
+											  <!--For littered births and stacks of eggs, the outcome is rerolled for each child.-->
+					</li>
+					<li>
+						<key>Horse</key>
+						<value>Other</value> <!--Does not inherit, instead uses a separate defined species.-->
+					</li>
+					<li>
+						<key>Hare</key>
+						<value>OtherRandom</value> <!--Does not inherit, instead uses a species at random from a separate list.-->
+					</li>
+				</inheritanceTypeDictionary>
+				<childrenOtherDictionary> <!--Dictionary to determine which species to spawn for the "Other" inheritance type. Key is father, value is child.-->
+					<li>
+						<key>Horse</key>
+						<value>Donkey</value>
+					</li>
+				</childrenOtherDictionary>
+				<childrenOtherRandomDictionary> <!--Dictionary to determine which species to pick from for the "OtherRandom" inheritance type. Key is father, value is a list of possible children.-->
+					<li>
+						<key>Hare</key>
+						<value>
+							<li>Muffalo</li>
+							<li>Bison</li>
+						</value>
+					</li>
+				</childrenOtherRandomDictionary>
+			</li>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAddModExtension">
+		<xpath>Defs/PawnKindDef[defName="Cat"]</xpath>
+		<value>
+			<li Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension">
+				<inheritanceTypeDictionary>
+					<li>
+						<key>Chicken</key>
+						<value>OtherRandom</value>
+					</li>
+				</inheritanceTypeDictionary>
+				<childrenOtherRandomDictionary>
+					<li>
+						<key>Chicken</key>
+						<value>
+							<li>Thrumbo</li>
+							<li>Muffalo</li>
+						</value>
+					</li>
+				</childrenOtherRandomDictionary>
+			</li>
+		</value>
+	</Operation>
+
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="Cat"]/race/gestationPeriodDays</xpath>
+		<value>
+			<gestationPeriodDays>0</gestationPeriodDays>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Chicken"]/race</xpath>
+		<value>
+			<canCrossBreedWith>
+				<li>Cat</li>
+				<li>LabradorRetriever</li>
+				<li>Thrumbo</li>
+				<li>Horse</li>
+				<li>Hare</li>
+			</canCrossBreedWith>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Cat"]/race</xpath>
+		<value>
+			<canCrossBreedWith>
+				<li>Chicken</li>
+			</canCrossBreedWith>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="LabradorRetriever"]/race</xpath>
+		<value>
+			<canCrossBreedWith>
+				<li>Chicken</li>
+			</canCrossBreedWith>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Thrumbo"]/race</xpath>
+		<value>
+			<canCrossBreedWith>
+				<li>Chicken</li>
+			</canCrossBreedWith>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Horse"]/race</xpath>
+		<value>
+			<canCrossBreedWith>
+				<li>Chicken</li>
+			</canCrossBreedWith>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Hare"]/race</xpath>
+		<value>
+			<canCrossBreedWith>
+				<li>Chicken</li>
+			</canCrossBreedWith>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>
+	<!--<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Donkey"]/race</xpath>
+		<value>
+			<mateMtbHours>0.2</mateMtbHours>
+		</value>
+	</Operation>-->
+		<Operation Class="PatchOperationReplace">
+			<xpath>Defs/ThingDef[defName="Chicken"]/comps</xpath>
+			<value>
+				<comps>
+					<li Class="CompProperties_EggLayer">
+						<eggUnfertilizedDef>EggChickenUnfertilized</eggUnfertilizedDef>
+						<eggProgressUnfertilizedMax>0.5</eggProgressUnfertilizedMax>
+						<eggFertilizedDef>EggChickenFertilized</eggFertilizedDef>
+						<eggFertilizationCountMax>1</eggFertilizationCountMax>
+						<eggLayIntervalDays>0</eggLayIntervalDays>
+						<eggCountRange>1</eggCountRange>
+					</li>
+				</comps>
+			</value>
+		</Operation>
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="EggChickenFertilized"]/comps</xpath>
+		<value>
+			<comps>
+				<li Class="CompProperties_Hatcher">
+					<hatcherDaystoHatch>1</hatcherDaystoHatch>
+					<hatcherPawn>Chicken</hatcherPawn>
+				</li>
+			</comps>
+		</value>
+	</Operation>
+</Patch>
