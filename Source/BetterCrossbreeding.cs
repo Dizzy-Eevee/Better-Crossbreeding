@@ -36,41 +36,44 @@ namespace DZY_BetterCrossbreeding
             {
                 return request;
             }
-            switch (extension.inheritanceTypeDictionary[father.kindDef])
+            if (extension.inheritanceTypeDictionary.ContainsKey(father.kindDef)) 
             {
-                case "Maternal":
-                    request.KindDef = mother.kindDef;
-                    return request;
-                case "Paternal":
-                    request.KindDef = father.kindDef;
-                    return request;
-                case "Random":
-                    int rand = Random.Range(0, 2);
-                    switch (rand)
-                    {
-                        case 0:
-                            request.KindDef = mother.kindDef;
-                            return request;
-                        case 1:
-                            request.KindDef = father.kindDef;
-                            return request;
-                    }
-                    return request;
-                case "Other":
-                    if (extension.childrenOtherDictionary[father.kindDef] != null)
-                    {
-                        request.KindDef = extension.childrenOtherDictionary[father.kindDef];
+                switch (extension.inheritanceTypeDictionary[father.kindDef])
+                {
+                    case "Maternal":
+                        request.KindDef = mother.kindDef;
                         return request;
-                    }
-                    return request;
-                case "OtherRandom":
-                    if (extension.childrenOtherRandomDictionary[father.kindDef] != null)
-                    {
-                        int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[father.kindDef].Count);
-                        request.KindDef = extension.childrenOtherRandomDictionary[father.kindDef][rand2];
+                    case "Paternal":
+                        request.KindDef = father.kindDef;
                         return request;
-                    }
-                    return request;
+                    case "Random":
+                        int rand = Random.Range(0, 2);
+                        switch (rand)
+                        {
+                            case 0:
+                                request.KindDef = mother.kindDef;
+                                return request;
+                            case 1:
+                                request.KindDef = father.kindDef;
+                                return request;
+                        }
+                        return request;
+                    case "Other":
+                        if (extension.childrenOtherDictionary[father.kindDef] != null)
+                        {
+                            request.KindDef = extension.childrenOtherDictionary[father.kindDef];
+                            return request;
+                        }
+                        return request;
+                    case "OtherRandom":
+                        if (extension.childrenOtherRandomDictionary[father.kindDef] != null)
+                        {
+                            int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[father.kindDef].Count);
+                            request.KindDef = extension.childrenOtherRandomDictionary[father.kindDef][rand2];
+                            return request;
+                        }
+                        return request;
+                }
             }
             return request;
         }
