@@ -1,78 +1,102 @@
 <Patch>
-	<Operation Class="PatchOperationAddModExtension">
-		<xpath>Defs/PawnKindDef[defName="Chicken"]</xpath>
-		<value>
-			<li Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension">
-				<inheritanceTypeDictionary> <!--Determines which inherittance behaviour to use with which partner. Key is the father animal, value is the inheritance type.--> 
-					<li>
-						<key>Cat</key>
-						<value>Paternal</value> <!--Inherits father's race, in this case a cat.-->
-					</li>
-					<li>
-						<key>LabradorRetriever</key>
-						<value>Maternal</value> <!--Inherits mother's race, in this case a chicken.-->
-					</li>
-					<li>
-						<key>Thrumbo</key>
-						<value>Random</value> <!--Inherits either the father or mother's race on a coin flip. 50% Thrumbos, 50% chickens.-->
-											  <!--For littered births and stacks of eggs, the outcome is rerolled for each child.-->
-					</li>
-					<li>
-						<key>Horse</key>
-						<value>Other</value> <!--Does not inherit, instead uses a separate defined species.-->
-					</li>
-					<li>
-						<key>Hare</key>
-						<value>OtherRandom</value> <!--Does not inherit, instead uses a species at random from a separate list.-->
-					</li>
-				</inheritanceTypeDictionary>
-				<childrenOtherDictionary> <!--Dictionary to determine which species to spawn for the "Other" inheritance type. Key is father, value is child.-->
-					<li>
-						<key>Horse</key>
-						<value>Donkey</value>
-					</li>
-				</childrenOtherDictionary>
-				<childrenOtherRandomDictionary> <!--Dictionary to determine which species to pick from for the "OtherRandom" inheritance type. Key is father, value is a list of possible children.-->
-					<li>
-						<key>Hare</key>
-						<value>
-							<li>Muffalo</li>
-							<li>Bison</li>
-						</value>
-					</li>
-				</childrenOtherRandomDictionary>
-			</li>
-		</value>
+	<!--Only run the AddModExtension operation if it doesn't already have it-->
+	<Operation Class="PatchOperationConditional">
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]</xpath>
+		<nomatch Class="PatchOperationAddModExtension">
+			<xpath>Defs/PawnKindDef[defName="Chicken"]</xpath>
+			<value>
+				<li Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension">
+					<inheritanceTypeDictionary></inheritanceTypeDictionary>
+					<childrenOtherDictionary></childrenOtherDictionary>
+					<childrenOtherRandomDictionary></childrenOtherRandomDictionary>
+					<childrenOtherRandomWeightedDictionary></childrenOtherRandomWeightedDictionary>
+					<!--For the sake of compatibility, instantiate all the dictionaries as empty, so other mods can add to them without worrying about whether they're present already or not.-->
+				</li>
+			</value>
+		</nomatch>
 	</Operation>
-	<Operation Class="PatchOperationAddModExtension">
-		<xpath>Defs/PawnKindDef[defName="Cat"]</xpath>
+
+	<!--inheritanceTypeDictionary determines which inheritance behaviour to use with which partner. Key is the father animal, value is the inheritance type.-->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/inheritanceTypeDictionary</xpath>
 		<value>
-			<li Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension">
-				<inheritanceTypeDictionary>
-					<li>
-						<key>Chicken</key>
-						<value>OtherRandom</value>
-					</li>
-				</inheritanceTypeDictionary>
-				<childrenOtherRandomDictionary>
-					<li>
-						<key>Chicken</key>
-						<value>
-							<li>Thrumbo</li>
-							<li>Muffalo</li>
-						</value>
-					</li>
-				</childrenOtherRandomDictionary>
+			<li>
+				<key>Cat</key>
+				<value>Paternal</value>
+				<!--Inherits father's race, in this case a cat.-->
+			</li>
+			<li>
+				<key>LabradorRetriever</key>
+				<value>Maternal</value>
+				<!--Inherits mother's race, in this case a chicken.-->
+			</li>
+			<li>
+				<key>Thrumbo</key>
+				<value>Random</value>
+				<!--Inherits either the father or mother's race on a coin flip. 50% Thrumbos, 50% chickens.-->
+				<!--For littered births and stacks of eggs, the outcome is rerolled for each child.-->
+			</li>
+			<li>
+				<key>Horse</key>
+				<value>Other</value>
+				<!--Does not inherit, instead uses a separate defined race.-->
+			</li>
+			<li>
+				<key>Hare</key>
+				<value>OtherRandom</value>
+				<!--Does not inherit, instead uses a race at random from a separate list.-->
+			</li>
+			<li>
+				<key>Elephant</key>
+				<value>OtherRandomWeighted</value>
+				<!--Does not inherit, instead uses a race at random from a separate weighted list.-->
 			</li>
 		</value>
 	</Operation>
 
-	<Operation Class="PatchOperationReplace">
-		<xpath>Defs/ThingDef[defName="Cat"]/race/gestationPeriodDays</xpath>
+	<!--childrenOtherDictionary determines which race to spawn for the "Other" inheritance type. Key is father, value is child.-->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/childrenOtherDictionary</xpath>
 		<value>
-			<gestationPeriodDays>0</gestationPeriodDays>
+			<li>
+				<key>Horse</key>
+				<value>Donkey</value>
+			</li>
 		</value>
 	</Operation>
+
+
+	<!--childrenOtherRandomDictionary determines which race to pick from for the "OtherRandom" inheritance type. Key is father, value is a list of possible children.-->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/childrenOtherRandomDictionary</xpath>
+		<value>
+			<li>
+				<key>Hare</key>
+				<value>
+					<li>Muffalo</li>
+					<li>Bison</li>
+				</value>
+			</li>
+		</value>
+	</Operation>
+
+	<!--childrenOtherRandomWeightedDictionary determines which race to pick from for the "OtherRandomWeighted" inheritance type. Key is father, value is a list of possible children along with the weight. Higher weight value means more likely.-->
+	<!--In this example, there is a 90% chance of producing a cat, and a 10% chance of producing a Thrumbo.-->
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/childrenOtherRandomWeightedDictionary</xpath>
+		<value>
+			<li>
+				<key>Elephant</key>
+				<value>
+					<Thrumbo>1</Thrumbo>
+					<Cat>9</Cat>
+				</value>
+			</li>
+		</value>
+	</Operation>
+
+	<!--Adding crossbreeding compatibility and making changes for testing.-->
+
 	<Operation Class="PatchOperationAdd">
 		<xpath>Defs/ThingDef[defName="Chicken"]/race</xpath>
 		<value>
@@ -82,8 +106,10 @@
 				<li>Thrumbo</li>
 				<li>Horse</li>
 				<li>Hare</li>
+				<li>Elephant</li>
 			</canCrossBreedWith>
 			<mateMtbHours>0.2</mateMtbHours>
+			<!--mateMtbHours is only edited for testing purposes, so you don't have to wait too long for animals to reproduce.-->
 		</value>
 	</Operation>
 	<Operation Class="PatchOperationAdd">
@@ -131,27 +157,31 @@
 			<mateMtbHours>0.2</mateMtbHours>
 		</value>
 	</Operation>
-	<!--<Operation Class="PatchOperationAdd">
-		<xpath>Defs/ThingDef[defName="Donkey"]/race</xpath>
+	<Operation Class="PatchOperationAdd">
+		<xpath>Defs/ThingDef[defName="Elephant"]/race</xpath>
 		<value>
+			<canCrossBreedWith>
+				<li>Chicken</li>
+			</canCrossBreedWith>
 			<mateMtbHours>0.2</mateMtbHours>
 		</value>
-	</Operation>-->
-		<Operation Class="PatchOperationReplace">
-			<xpath>Defs/ThingDef[defName="Chicken"]/comps</xpath>
-			<value>
-				<comps>
-					<li Class="CompProperties_EggLayer">
-						<eggUnfertilizedDef>EggChickenUnfertilized</eggUnfertilizedDef>
-						<eggProgressUnfertilizedMax>0.5</eggProgressUnfertilizedMax>
-						<eggFertilizedDef>EggChickenFertilized</eggFertilizedDef>
-						<eggFertilizationCountMax>1</eggFertilizationCountMax>
-						<eggLayIntervalDays>0</eggLayIntervalDays>
-						<eggCountRange>1</eggCountRange>
-					</li>
-				</comps>
-			</value>
-		</Operation>
+	</Operation>
+	<!--Make chickens lay 20 eggs at a time, really fast (but stop at 50% when unfertilized), for the sake of testing.-->
+	<Operation Class="PatchOperationReplace">
+		<xpath>Defs/ThingDef[defName="Chicken"]/comps</xpath>
+		<value>
+			<comps>
+				<li Class="CompProperties_EggLayer">
+					<eggUnfertilizedDef>EggChickenUnfertilized</eggUnfertilizedDef>
+					<eggProgressUnfertilizedMax>0.5</eggProgressUnfertilizedMax>
+					<eggFertilizedDef>EggChickenFertilized</eggFertilizedDef>
+					<eggFertilizationCountMax>20</eggFertilizationCountMax>
+					<eggLayIntervalDays>0</eggLayIntervalDays>
+					<eggCountRange>20</eggCountRange>
+				</li>
+			</comps>
+		</value>
+	</Operation>
 	<Operation Class="PatchOperationReplace">
 		<xpath>Defs/ThingDef[defName="EggChickenFertilized"]/comps</xpath>
 		<value>

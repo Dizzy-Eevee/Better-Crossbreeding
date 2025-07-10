@@ -1,6 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
@@ -24,6 +22,7 @@ namespace DZY_BetterCrossbreeding
         public Dictionary<PawnKindDef, string> inheritanceTypeDictionary = [];// Values: Paternal, Maternal, Random, Other, OtherRandom
         public Dictionary<PawnKindDef, PawnKindDef> childrenOtherDictionary = []; 
         public Dictionary<PawnKindDef, List<PawnKindDef>> childrenOtherRandomDictionary = [];
+        public Dictionary<PawnKindDef, List<PawnKindDefWeight>> childrenOtherRandomWeightedDictionary = [];
     }
     public static class DZY_Crossbreeding_Utility
     {
@@ -73,6 +72,13 @@ namespace DZY_BetterCrossbreeding
                         {
                             int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[father.kindDef].Count);
                             request.KindDef = extension.childrenOtherRandomDictionary[father.kindDef][rand2];
+                            return request;
+                        }
+                        return request;
+                    case "OtherRandomWeighted":
+                        if (extension.childrenOtherRandomWeightedDictionary[father.kindDef] != null)
+                        {
+                            request.KindDef = GenCollection.RandomElementByWeight<PawnKindDefWeight>(extension.childrenOtherRandomWeightedDictionary[father.kindDef], weight => weight.weight).kindDef;
                             return request;
                         }
                         return request;
@@ -153,5 +159,4 @@ namespace DZY_BetterCrossbreeding
             }
         }
     }
-
 }
