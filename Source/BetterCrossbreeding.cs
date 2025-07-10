@@ -29,7 +29,10 @@ namespace DZY_BetterCrossbreeding
     {
         public static PawnGenerationRequest DZY_GetPawnKindDefForCrossbreeding(PawnGenerationRequest request, Pawn mother, Pawn father)
         {
-            
+            if (mother == null || father == null)
+            {
+                return request;
+            }
             DZY_Crossbreeding_Extension extension = mother.kindDef.GetModExtension<DZY_Crossbreeding_Extension>();
             DZY_Crossbreeding_Extension extensionFather = father.kindDef.GetModExtension<DZY_Crossbreeding_Extension>();
             if (extension == null)
