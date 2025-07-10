@@ -78,7 +78,7 @@ namespace DZY_BetterCrossbreeding
                     case "OtherRandomWeighted":
                         if (extension.childrenOtherRandomWeightedDictionary[father.kindDef] != null)
                         {
-                            request.KindDef = GenCollection.RandomElementByWeight<PawnKindDefWeight>(extension.childrenOtherRandomWeightedDictionary[father.kindDef], weight => weight.weight).kindDef;
+                            request.KindDef = extension.childrenOtherRandomWeightedDictionary[father.kindDef].RandomElementByWeight<PawnKindDefWeight>(w => w.weight).kindDef;
                             return request;
                         }
                         return request;
