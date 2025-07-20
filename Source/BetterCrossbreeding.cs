@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 using Verse;
 
 namespace DZY_BetterCrossbreeding
@@ -107,7 +108,7 @@ namespace DZY_BetterCrossbreeding
                         request.KindDef = fatherKindDef;
                         return request;
                     case "Random":
-                        int rand = UnityEngine.Random.Range(0, 2);
+                        int rand = Random.Range(0, 2);
                         switch (rand)
                         {
                             case 0:
@@ -128,7 +129,7 @@ namespace DZY_BetterCrossbreeding
                     case "OtherRandom":
                         if (extension.childrenOtherRandomDictionary[fatherKindDef] != null)
                         {
-                            int rand2 = UnityEngine.Random.Range(0, extension.childrenOtherRandomDictionary[fatherKindDef].Count);
+                            int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[fatherKindDef].Count);
                             request.KindDef = extension.childrenOtherRandomDictionary[fatherKindDef][rand2];
                             return request;
                         }
