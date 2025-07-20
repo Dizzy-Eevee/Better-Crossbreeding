@@ -46,6 +46,16 @@ namespace DZY_BetterCrossbreeding
     {
         public PawnKindDef fatherKindDef;
 
+        public override bool AllowStackWith(Thing other)
+        {
+            DZY_CompFatherKindDef comp = ((ThingWithComps)other).GetComp<DZY_CompFatherKindDef>();
+            if (fatherKindDef != comp.fatherKindDef)
+            {
+                return false;
+            }
+
+            return base.AllowStackWith(other);
+        }
         public override void PostExposeData()
         {
             base.PostExposeData();
@@ -252,22 +262,6 @@ namespace DZY_BetterCrossbreeding
             }
         }
 
-    }
-    [HarmonyPatch(typeof(CompHatcher), nameof(CompHatcher.AllowStackWith))]
-    public static class DZY_Crosspreeding_Postfix_EggStacking
-    {
-        [HarmonyPostfix]
-        public static void AllowStackWith_Postfix(CompHatcher __instance, Thing other, ref bool __result)
-        {
-            if (__result)
-            {
-                CompHatcher comp = other.TryGetComp<CompHatcher>();
-                if (!comp.TemperatureDamaged)
-                {
-                    __result = __instance.otherParent.kindDef == comp.otherParent.kindDef;
-                }
-            }
-        }
     }
     [HarmonyPatch(typeof(Hediff_Pregnant), nameof(Hediff_Pregnant.PostAdd))]
     public static class DZY_Crossbreeding_Postfix_Pregnant_PostAdd
