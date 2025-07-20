@@ -157,6 +157,10 @@ namespace DZY_BetterCrossbreeding
             DZY_CompParentKindDef parentKindDef = comp.parent.GetComp<DZY_CompParentKindDef>(); 
             PawnKindDef father = parentKindDef.fatherKindDef;
             PawnKindDef mother = parentKindDef.motherKindDef;
+            if (father == null || mother == null)
+            {
+                return request;
+            }
             DZY_Crossbreeding_Extension extension = mother.GetModExtension<DZY_Crossbreeding_Extension>();
             if (extension == null)
             {
