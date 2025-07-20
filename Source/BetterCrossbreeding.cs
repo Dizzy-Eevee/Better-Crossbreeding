@@ -6,6 +6,7 @@ using HarmonyLib;
 using RimWorld;
 using UnityEngine;
 using Verse;
+using static HarmonyLib.Code;
 
 namespace DZY_BetterCrossbreeding
 {
@@ -56,10 +57,19 @@ namespace DZY_BetterCrossbreeding
 
             return base.AllowStackWith(other);
         }
+        public override void PostSplitOff(Thing piece)
+        {
+            DZY_CompFatherKindDef comp = ((ThingWithComps)piece).GetComp<DZY_CompFatherKindDef>();
+            comp.fatherKindDef = fatherKindDef;
+        }
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Defs.Look(ref fatherKindDef, "fatherKindDef");
+        }
+        public override string CompInspectStringExtra()
+        {
+            return "Father: " + fatherKindDef.ToString();
         }
     }
     public static class DZY_Crossbreeding_Utility
