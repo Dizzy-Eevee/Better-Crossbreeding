@@ -18,7 +18,7 @@ namespace DZY_BetterCrossbreeding
             {
                 if (def.HasComp<CompHatcher>())
                 {
-                    def.comps.Add(new CompProperties(typeof(DZY_CompFatherKindDef)));
+                    def.comps.Add(new CompProperties(typeof(DZY_CompParentKindDef)));
                 }
             }
             harmony.PatchAll();
@@ -41,13 +41,14 @@ namespace DZY_BetterCrossbreeding
         public Dictionary<PawnKindDef, List<PawnKindDef>> childrenOtherRandomDictionary = [];
         public Dictionary<PawnKindDef, List<PawnKindDefWeight>> childrenOtherRandomWeightedDictionary = [];
     }
-    public class DZY_CompFatherKindDef : ThingComp
+    public class DZY_CompParentKindDef : ThingComp
     {
         public PawnKindDef fatherKindDef;
+        public PawnKindDef motherKindDef;
 
         public override bool AllowStackWith(Thing other)
         {
-            DZY_CompFatherKindDef comp = ((ThingWithComps)other).GetComp<DZY_CompFatherKindDef>();
+            DZY_CompParentKindDef comp = ((ThingWithComps)other).GetComp<DZY_CompParentKindDef>();
             if (fatherKindDef != comp.fatherKindDef)
             {
                 return false;
@@ -57,13 +58,15 @@ namespace DZY_BetterCrossbreeding
         }
         public override void PostSplitOff(Thing piece)
         {
-            DZY_CompFatherKindDef comp = ((ThingWithComps)piece).GetComp<DZY_CompFatherKindDef>();
+            DZY_CompParentKindDef comp = ((ThingWithComps)piece).GetComp<DZY_CompParentKindDef>();
             comp.fatherKindDef = fatherKindDef;
+            comp.motherKindDef = motherKindDef;
         }
         public override void PostExposeData()
         {
             base.PostExposeData();
             Scribe_Defs.Look(ref fatherKindDef, "fatherKindDef");
+            Scribe_Defs.Look(ref motherKindDef, "motherKindDef");
         }
         public override string CompInspectStringExtra()
         {
@@ -147,8 +150,9 @@ namespace DZY_BetterCrossbreeding
         }
         public static PawnGenerationRequest GetPawnKindDefForCrossbreeding_Egg(PawnGenerationRequest request, CompHatcher comp)
         {
-            PawnKindDef mother = request.KindDef;
-            PawnKindDef father = comp.parent.GetComp<DZY_CompFatherKindDef>().fatherKindDef;
+            DZY_CompParentKindDef parentKindDef = comp.parent.GetComp<DZY_CompParentKindDef>(); 
+            PawnKindDef father = parentKindDef.fatherKindDef;
+            PawnKindDef mother = parentKindDef.motherKindDef;
             DZY_Crossbreeding_Extension extension = mother.GetModExtension<DZY_Crossbreeding_Extension>();
             if (extension == null)
             {
@@ -165,7 +169,7 @@ namespace DZY_BetterCrossbreeding
                         request.KindDef = father;
                         return request;
                     case "Random":
-                        int rand = UnityEngine.Random.Range(0, 2);
+                        int rand = Random.Range(0, 2);
                         switch (rand)
                         {
                             case 0:
@@ -177,22 +181,22 @@ namespace DZY_BetterCrossbreeding
                         }
                         return request;
                     case "Other":
-                        if (extension.childrenOtherDictionary[father] != null)
+                        if (extension.childrenOtherDictionary.ContainsKey(father))
                         {
                             request.KindDef = extension.childrenOtherDictionary[father];
                             return request;
                         }
                         return request;
                     case "OtherRandom":
-                        if (extension.childrenOtherRandomDictionary[father] != null)
+                        if (extension.childrenOtherRandomDictionary.ContainsKey(father))
                         {
-                            int rand2 = UnityEngine.Random.Range(0, extension.childrenOtherRandomDictionary[father].Count);
+                            int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[father].Count);
                             request.KindDef = extension.childrenOtherRandomDictionary[father][rand2];
                             return request;
                         }
                         return request;
                     case "OtherRandomWeighted":
-                        if (extension.childrenOtherRandomWeightedDictionary[father] != null)
+                        if (extension.childrenOtherRandomWeightedDictionary.ContainsKey(father))
                         {
                             request.KindDef = extension.childrenOtherRandomWeightedDictionary[father].RandomElementByWeight<PawnKindDefWeight>(w => w.weight).kindDef;
                             return request;
@@ -303,10 +307,12 @@ namespace DZY_BetterCrossbreeding
             public static void ProduceEgg_Postfix(CompEggLayer __instance, Thing __result)
             {
                 DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
-                DZY_CompFatherKindDef comp1 = __result.TryGetComp<DZY_CompFatherKindDef>();
+                DZY_CompParentKindDef comp1 = __result.TryGetComp<DZY_CompParentKindDef>();
                 if (comp1 != null)
                 {
                     comp1.fatherKindDef = component.dict.TryGetValue(__instance.parent.thingIDNumber);
+                    Pawn mother = __instance.parent as Pawn;
+                    comp1.motherKindDef = mother.kindDef;
                     component.dict.Remove(__instance.parent.thingIDNumber);
                 }
             }
