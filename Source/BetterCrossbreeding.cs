@@ -70,7 +70,11 @@ namespace DZY_BetterCrossbreeding
         }
         public override string CompInspectStringExtra()
         {
-            return "Father: " + fatherKindDef.ToString();
+            if (fatherKindDef != null)
+            {
+                return "Father: " + fatherKindDef.ToString();
+            }
+            else return null;
         }
     }
     public static class DZY_Crossbreeding_Utility
