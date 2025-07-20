@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using RimWorld;
-using UnityEngine;
 using Verse;
-using static HarmonyLib.Code;
 
 namespace DZY_BetterCrossbreeding
 {
