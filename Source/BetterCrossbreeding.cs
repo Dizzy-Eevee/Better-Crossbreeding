@@ -1,12 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Xml;
 using HarmonyLib;
 using RimWorld;
-using UnityEngine;
 using Verse;
 
-namespace DZY_BetterCrossbreeding
+namespace DZY.CrossBreeding
 {
     [StaticConstructorOnStartup]
     public static class HarmonyPatches
@@ -14,17 +15,83 @@ namespace DZY_BetterCrossbreeding
         static HarmonyPatches()
         {
             var harmony = new Harmony("DizzyEevee.BetterCrossbreeding");
+            int i = 0;
             foreach (ThingDef def in DefDatabase<ThingDef>.AllDefsListForReading)
             {
                 if (def.HasComp<CompHatcher>())
                 {
-                    def.comps.Add(new CompProperties(typeof(DZY_CompParentKindDef)));
+                    def.comps.Add(new CompProperties(typeof(CompParentKindDef)));
+                    i++;
                 }
             }
+            Log.Message("BetterCrossbreeding added CompParentKindDef to " + i + " egg defs.");
+            //foreach (PawnKindDef def in DefDatabase<PawnKindDef>.AllDefsListForReading)
+            //{
+
+            //    if (def.HasModExtension<Extension>())
+            //    {
+            //        Extension x = def.GetModExtension<Extension>();
+            //        foreach (PawnKindDefOutcomes outcome in x.outcomes)
+            //        {
+            //            Log.Message(outcome.kindDef.ToString());
+            //            Log.Message(outcome.behavior);
+            //            for (int i = 0; i < outcome.childrenKinds.Count; i++)
+            //            {
+            //                Log.Message(outcome.childrenKinds[i].ToString());
+            //                Log.Message(outcome.childrenWeights[i].ToString());
+            //            }
+            //        }
+            //    }
+            //}
             harmony.PatchAll();
         }
     }
-    public class DZY_GameComponentBreedingDictionary : GameComponent
+
+    public class BehaviorAndChildren
+    {
+        public void LoadDataFromXmlCustom(XmlNode xmlRoot)
+        {
+            XmlHelper.ParseElements(this, xmlRoot, "behavior", "children");
+        }
+    }
+    public class PawnKindDefOutcomes
+    {
+        public PawnKindDef kindDef;
+        public string behavior;
+        public List<PawnKindDef> childrenKinds = [];
+        public List<int> childrenWeights = [];
+        public void LoadDataFromXmlCustom(XmlNode xmlRoot)
+        {
+            //XmlHelper.ParseElements(this, xmlRoot, "kindDef", "outcome");
+            DirectXmlCrossRefLoader.RegisterObjectWantsCrossRef(this, "kindDef", xmlRoot.Name);
+            foreach (XmlNode childNode in xmlRoot.ChildNodes)
+            {
+                if (childNode is XmlComment)
+                {
+                    continue;
+                }
+                behavior = childNode.Name;
+                foreach (XmlNode childNode2 in childNode.ChildNodes)
+                {
+                    if (childNode2 is XmlComment)
+                    {
+                        continue;
+                    }
+                    DirectXmlCrossRefLoader.RegisterListWantsCrossRef(childrenKinds, childNode2.Name);
+                    if (childNode2.InnerText != "")
+                    {
+                        childrenWeights.Add(Int32.Parse(childNode2.InnerText));
+                    }
+                    else
+                    {
+                        childrenWeights.Add(1);
+                    }
+                }
+            }
+        }
+    }
+
+    public class GameComponentBreedingDictionary : GameComponent
     {
         public Dictionary<int, PawnKindDef> dict = [];
 
@@ -32,23 +99,20 @@ namespace DZY_BetterCrossbreeding
         {
             Scribe_Collections.Look(ref dict, "dict");
         }
-        public DZY_GameComponentBreedingDictionary(Game game) { }
+        public GameComponentBreedingDictionary(Game game) { }
     }
-    public class DZY_Crossbreeding_Extension : DefModExtension
+    public class Extension : DefModExtension
     {
-        public Dictionary<PawnKindDef, string> inheritanceTypeDictionary = [];// Values: Paternal, Maternal, Random, Other, OtherRandom
-        public Dictionary<PawnKindDef, PawnKindDef> childrenOtherDictionary = [];
-        public Dictionary<PawnKindDef, List<PawnKindDef>> childrenOtherRandomDictionary = [];
-        public Dictionary<PawnKindDef, List<PawnKindDefWeight>> childrenOtherRandomWeightedDictionary = [];
+        public List<PawnKindDefOutcomes> outcomes = [];// Values: Paternal, Maternal, Random, Other, OtherRandom
     }
-    public class DZY_CompParentKindDef : ThingComp
+    public class CompParentKindDef : ThingComp
     {
         public PawnKindDef fatherKindDef;
         public PawnKindDef motherKindDef;
 
         public override bool AllowStackWith(Thing other)
         {
-            DZY_CompParentKindDef comp = ((ThingWithComps)other).GetComp<DZY_CompParentKindDef>();
+            CompParentKindDef comp = ((ThingWithComps)other).GetComp<CompParentKindDef>();
             if (fatherKindDef != comp.fatherKindDef)
             {
                 return false;
@@ -58,7 +122,7 @@ namespace DZY_BetterCrossbreeding
         }
         public override void PostSplitOff(Thing piece)
         {
-            DZY_CompParentKindDef comp = ((ThingWithComps)piece).GetComp<DZY_CompParentKindDef>();
+            CompParentKindDef comp = ((ThingWithComps)piece).GetComp<CompParentKindDef>();
             comp.fatherKindDef = fatherKindDef;
             comp.motherKindDef = motherKindDef;
         }
@@ -77,7 +141,7 @@ namespace DZY_BetterCrossbreeding
             else return null;
         }
     }
-    public static class DZY_Crossbreeding_Utility
+    public static class CrossbreedingUtility
     {
         public static PawnGenerationRequest GetPawnKindDefForCrossbreeding(PawnGenerationRequest request, Pawn mother, Pawn father)
         {
@@ -85,7 +149,7 @@ namespace DZY_BetterCrossbreeding
             {
                 return request;
             }
-            DZY_Crossbreeding_Extension extension = mother.kindDef.GetModExtension<DZY_Crossbreeding_Extension>();
+            Extension extension = mother.kindDef.GetModExtension<Extension>();
             if (extension == null)
             {
                 return request;
@@ -93,7 +157,7 @@ namespace DZY_BetterCrossbreeding
             PawnKindDef fatherKindDef;
             if (father == null)
             {
-                DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
+                GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
                 fatherKindDef = component.dict.TryGetValue(mother.thingIDNumber);
             }
             else
@@ -104,9 +168,15 @@ namespace DZY_BetterCrossbreeding
             {
                 return request;
             }
-            if (extension.inheritanceTypeDictionary.ContainsKey(fatherKindDef))
+            List<PawnKindDef> validFathers = [];
+            foreach (PawnKindDefOutcomes x in extension.outcomes)
             {
-                switch (extension.inheritanceTypeDictionary[fatherKindDef])
+                validFathers.Add(x.kindDef);
+            }
+            if (validFathers.Contains(fatherKindDef))
+            {
+                int index = validFathers.IndexOf(fatherKindDef);
+                switch (extension.outcomes[index].behavior)
                 {
                     case "Maternal":
                         request.KindDef = mother.kindDef;
@@ -115,7 +185,7 @@ namespace DZY_BetterCrossbreeding
                         request.KindDef = fatherKindDef;
                         return request;
                     case "Random":
-                        int rand = Random.Range(0, 2);
+                        int rand = UnityEngine.Random.Range(0, 2);
                         switch (rand)
                         {
                             case 0:
@@ -127,26 +197,17 @@ namespace DZY_BetterCrossbreeding
                         }
                         return request;
                     case "Other":
-                        if (extension.childrenOtherDictionary[fatherKindDef] != null)
+                        List<PawnKindDefWeight> x = [];
+                        for (int i = 0; i < extension.outcomes[index].childrenKinds.Count; i++)
                         {
-                            request.KindDef = extension.childrenOtherDictionary[fatherKindDef];
-                            return request;
+                            x.Add(new PawnKindDefWeight
+                            {
+                                kindDef = extension.outcomes[index].childrenKinds[i],
+                                weight = extension.outcomes[index].childrenWeights[i]
+                            }
+                            );
                         }
-                        return request;
-                    case "OtherRandom":
-                        if (extension.childrenOtherRandomDictionary[fatherKindDef] != null)
-                        {
-                            int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[fatherKindDef].Count);
-                            request.KindDef = extension.childrenOtherRandomDictionary[fatherKindDef][rand2];
-                            return request;
-                        }
-                        return request;
-                    case "OtherRandomWeighted":
-                        if (extension.childrenOtherRandomWeightedDictionary[fatherKindDef] != null)
-                        {
-                            request.KindDef = extension.childrenOtherRandomWeightedDictionary[fatherKindDef].RandomElementByWeight<PawnKindDefWeight>(w => w.weight).kindDef;
-                            return request;
-                        }
+                        request.KindDef = x.RandomElementByWeight(w => w.weight).kindDef;
                         return request;
                 }
             }
@@ -154,21 +215,27 @@ namespace DZY_BetterCrossbreeding
         }
         public static PawnGenerationRequest GetPawnKindDefForCrossbreeding_Egg(PawnGenerationRequest request, CompHatcher comp)
         {
-            DZY_CompParentKindDef parentKindDef = comp.parent.GetComp<DZY_CompParentKindDef>(); 
+            CompParentKindDef parentKindDef = comp.parent.GetComp<CompParentKindDef>();
             PawnKindDef father = parentKindDef.fatherKindDef;
             PawnKindDef mother = parentKindDef.motherKindDef;
             if (father == null || mother == null)
             {
                 return request;
             }
-            DZY_Crossbreeding_Extension extension = mother.GetModExtension<DZY_Crossbreeding_Extension>();
+            Extension extension = mother.GetModExtension<Extension>();
             if (extension == null)
             {
                 return request;
             }
-            if (extension.inheritanceTypeDictionary.ContainsKey(father))
+            List<PawnKindDef> validFathers = [];
+            foreach (PawnKindDefOutcomes x in extension.outcomes)
             {
-                switch (extension.inheritanceTypeDictionary[father])
+                validFathers.Add(x.kindDef);
+            }
+            if (validFathers.Contains(father))
+            {
+                int index = validFathers.IndexOf(father);
+                switch (extension.outcomes[index].behavior)
                 {
                     case "Maternal":
                         request.KindDef = mother;
@@ -177,7 +244,7 @@ namespace DZY_BetterCrossbreeding
                         request.KindDef = father;
                         return request;
                     case "Random":
-                        int rand = Random.Range(0, 2);
+                        int rand = UnityEngine.Random.Range(0, 2);
                         switch (rand)
                         {
                             case 0:
@@ -189,26 +256,17 @@ namespace DZY_BetterCrossbreeding
                         }
                         return request;
                     case "Other":
-                        if (extension.childrenOtherDictionary.ContainsKey(father))
+                        List<PawnKindDefWeight> x = [];
+                        for (int i = 0; i < extension.outcomes[index].childrenKinds.Count; i++)
                         {
-                            request.KindDef = extension.childrenOtherDictionary[father];
-                            return request;
+                            x.Add(new PawnKindDefWeight
+                            {
+                                kindDef = extension.outcomes[index].childrenKinds[i],
+                                weight = extension.outcomes[index].childrenWeights[i]
+                            }
+                            );
                         }
-                        return request;
-                    case "OtherRandom":
-                        if (extension.childrenOtherRandomDictionary.ContainsKey(father))
-                        {
-                            int rand2 = Random.Range(0, extension.childrenOtherRandomDictionary[father].Count);
-                            request.KindDef = extension.childrenOtherRandomDictionary[father][rand2];
-                            return request;
-                        }
-                        return request;
-                    case "OtherRandomWeighted":
-                        if (extension.childrenOtherRandomWeightedDictionary.ContainsKey(father))
-                        {
-                            request.KindDef = extension.childrenOtherRandomWeightedDictionary[father].RandomElementByWeight<PawnKindDefWeight>(w => w.weight).kindDef;
-                            return request;
-                        }
+                        request.KindDef = x.RandomElementByWeight(w => w.weight).kindDef;
                         return request;
                 }
             }
@@ -216,20 +274,20 @@ namespace DZY_BetterCrossbreeding
         }
         public static void RemoveDictEntry(Pawn pawn)
         {
-            DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
+            GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
             component.dict.Remove(pawn.thingIDNumber);
         }
     }
 
     [HarmonyPatch(typeof(Hediff_Pregnant), nameof(Hediff_Pregnant.DoBirthSpawn))]
-    public static class DZY_Crossbreeding_Transpiler
+    public static class DoBirthSpawn_Patch
     {
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> DoBirthSpawn_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
         {
             MethodInfo genPawn = AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), [typeof(PawnGenerationRequest)]);
-            MethodInfo getKindDef = AccessTools.Method(typeof(DZY_Crossbreeding_Utility), nameof(DZY_Crossbreeding_Utility.GetPawnKindDefForCrossbreeding));
-            MethodInfo removeDictEntry = AccessTools.Method(typeof(DZY_Crossbreeding_Utility), nameof(DZY_Crossbreeding_Utility.RemoveDictEntry));
+            MethodInfo getKindDef = AccessTools.Method(typeof(CrossbreedingUtility), nameof(CrossbreedingUtility.GetPawnKindDefForCrossbreeding));
+            MethodInfo removeDictEntry = AccessTools.Method(typeof(CrossbreedingUtility), nameof(CrossbreedingUtility.RemoveDictEntry));
             bool flag = false;
             foreach (CodeInstruction instruction in instructions)
             {
@@ -256,7 +314,7 @@ namespace DZY_BetterCrossbreeding
 
     }
     [HarmonyPatch(typeof(CompHatcher), nameof(CompHatcher.Hatch))]
-    public static class DZY_Crossbreeding_Transpiler_Hatch
+    public static class CompHatcher_Patch
     {
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Hatch_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator il)
@@ -264,7 +322,7 @@ namespace DZY_BetterCrossbreeding
             FieldInfo getMother = AccessTools.Field(typeof(CompHatcher), ("hatcheeParent"));
             FieldInfo getFather = AccessTools.Field(typeof(CompHatcher), ("otherParent"));
             MethodInfo genPawn = AccessTools.Method(typeof(PawnGenerator), nameof(PawnGenerator.GeneratePawn), [typeof(PawnGenerationRequest)]);
-            MethodInfo getKindDef = AccessTools.Method(typeof(DZY_Crossbreeding_Utility), nameof(DZY_Crossbreeding_Utility.GetPawnKindDefForCrossbreeding_Egg));
+            MethodInfo getKindDef = AccessTools.Method(typeof(CrossbreedingUtility), nameof(CrossbreedingUtility.GetPawnKindDefForCrossbreeding_Egg));
             bool flag = false;
             foreach (CodeInstruction instruction in instructions)
             {
@@ -284,38 +342,38 @@ namespace DZY_BetterCrossbreeding
 
     }
     [HarmonyPatch(typeof(Hediff_Pregnant), nameof(Hediff_Pregnant.PostAdd))]
-    public static class DZY_Crossbreeding_Postfix_Pregnant_PostAdd
+    public static class Pregnant_PostAdd_Patch
     {
         [HarmonyPostfix]
         public static void Pregnant_PostAdd_Postfix(Hediff_Pregnant __instance)
         {
             if (!__instance.pawn.RaceProps.Humanlike)
             {
-                DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
+                GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
                 component.dict.Add(__instance.pawn.thingIDNumber, __instance.Father.kindDef);
             }
         }
     }
     [HarmonyPatch(typeof(CompEggLayer), nameof(CompEggLayer.Fertilize))]
-    public static class DZY_Crossbreeding_Postfix_Fertilize
+    public static class Fertilize_Patch
     {
         [HarmonyPostfix]
         public static void Fertilize_Postfix(CompEggLayer __instance, Pawn male)
         {
 
-            DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
+            GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
             component.dict.Add(__instance.parent.thingIDNumber, male.kindDef);
         }
 
 
         [HarmonyPatch(typeof(CompEggLayer), nameof(CompEggLayer.ProduceEgg))]
-        public static class DZY_Crossbreeding_Postfix_ProduceEgg
+        public static class ProduceEgg_Patch
         {
             [HarmonyPostfix]
             public static void ProduceEgg_Postfix(CompEggLayer __instance, Thing __result)
             {
-                DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
-                DZY_CompParentKindDef comp1 = __result.TryGetComp<DZY_CompParentKindDef>();
+                GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
+                CompParentKindDef comp1 = __result.TryGetComp<CompParentKindDef>();
                 if (comp1 != null)
                 {
                     comp1.fatherKindDef = component.dict.TryGetValue(__instance.parent.thingIDNumber);
@@ -327,12 +385,12 @@ namespace DZY_BetterCrossbreeding
         }
     }
     [HarmonyPatch(typeof(Pawn), nameof(Pawn.Destroy))]
-    public static class DZY_PawnDestroy_Prefix
+    public static class PawnDestroy_Patch
     {
         [HarmonyPrefix]
         public static bool PawnDestroy_Prefix(Pawn __instance)
         {
-            DZY_GameComponentBreedingDictionary component = Current.Game.GetComponent<DZY_GameComponentBreedingDictionary>();
+            GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
             component.dict.Remove(__instance.thingIDNumber);
             return true;
         }

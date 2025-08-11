@@ -1,97 +1,54 @@
 <Patch>
-	<!--Only run the AddModExtension operation if it doesn't already have it-->
+	<!--Only run the AddModExtension operation if it doesn't already have it, for the sake of compatibility with other mods.-->
 	<Operation Class="PatchOperationConditional">
-		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]</xpath>
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY.Crossbreeding.Extension"]</xpath>
 		<nomatch Class="PatchOperationAddModExtension">
 			<xpath>Defs/PawnKindDef[defName="Chicken"]</xpath>
 			<value>
-				<li Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension">
-					<inheritanceTypeDictionary></inheritanceTypeDictionary>
-					<childrenOtherDictionary></childrenOtherDictionary>
-					<childrenOtherRandomDictionary></childrenOtherRandomDictionary>
-					<childrenOtherRandomWeightedDictionary></childrenOtherRandomWeightedDictionary>
-					<!--For the sake of compatibility, instantiate all the dictionaries as empty, so other mods can add to them without worrying about whether they're present already or not.-->
+				<li Class="DZY.Crossbreeding.Extension">
+					<outcomes></outcomes>
 				</li>
 			</value>
 		</nomatch>
 	</Operation>
 
-	<!--inheritanceTypeDictionary determines which inheritance behaviour to use with which partner. Key is the father animal, value is the inheritance type.-->
+	<!--Add outcomes via patch.-->
 	<Operation Class="PatchOperationAdd">
-		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/inheritanceTypeDictionary</xpath>
+		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY.Crossbreeding.Extension"]/outcomes</xpath>
 		<value>
-			<li>
-				<key>Cat</key>
-				<value>Paternal</value>
+			<Cat>
+				<Paternal />
 				<!--Inherits father's race, in this case a cat.-->
-			</li>
-			<li>
-				<key>LabradorRetriever</key>
-				<value>Maternal</value>
+			</Cat>
+			<LabradorRetriever>
+				<Maternal />
 				<!--Inherits mother's race, in this case a chicken.-->
-			</li>
-			<li>
-				<key>Thrumbo</key>
-				<value>Random</value>
+			</LabradorRetriever>
+			<Thrumbo>
+				<Random />
 				<!--Inherits either the father or mother's race on a coin flip. 50% Thrumbos, 50% chickens.-->
 				<!--For littered births and stacks of eggs, the outcome is rerolled for each child.-->
-			</li>
-			<li>
-				<key>Horse</key>
-				<value>Other</value>
-				<!--Does not inherit, instead uses a separate defined race.-->
-			</li>
-			<li>
-				<key>Hare</key>
-				<value>OtherRandom</value>
-				<!--Does not inherit, instead uses a race at random from a separate list.-->
-			</li>
-			<li>
-				<key>Elephant</key>
-				<value>OtherRandomWeighted</value>
-				<!--Does not inherit, instead uses a race at random from a separate weighted list.-->
-			</li>
-		</value>
-	</Operation>
-
-	<!--childrenOtherDictionary determines which race to spawn for the "Other" inheritance type. Key is father, value is child.-->
-	<Operation Class="PatchOperationAdd">
-		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/childrenOtherDictionary</xpath>
-		<value>
-			<li>
-				<key>Horse</key>
-				<value>Donkey</value>
-			</li>
-		</value>
-	</Operation>
-
-
-	<!--childrenOtherRandomDictionary determines which race to pick from for the "OtherRandom" inheritance type. Key is father, value is a list of possible children.-->
-	<Operation Class="PatchOperationAdd">
-		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/childrenOtherRandomDictionary</xpath>
-		<value>
-			<li>
-				<key>Hare</key>
-				<value>
-					<li>Muffalo</li>
-					<li>Bison</li>
-				</value>
-			</li>
-		</value>
-	</Operation>
-
-	<!--childrenOtherRandomWeightedDictionary determines which race to pick from for the "OtherRandomWeighted" inheritance type. Key is father, value is a list of possible children along with the weight. Higher weight value means more likely.-->
-	<!--In this example, there is a 90% chance of producing a cat, and a 10% chance of producing a Thrumbo.-->
-	<Operation Class="PatchOperationAdd">
-		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY_BetterCrossbreeding.DZY_Crossbreeding_Extension"]/childrenOtherRandomWeightedDictionary</xpath>
-		<value>
-			<li>
-				<key>Elephant</key>
-				<value>
+			</Thrumbo>
+			<Horse>
+				<Other>
+					<Donkey/>
+					<!--Does not inherit, instead produces a donkey.-->
+				</Other>
+			</Horse>
+			<Hare>
+				<Other>
+					<Muffalo/>
+					<Bison/>
+					<!--Does not inherit, instead has a 50% chance of producing a muffalo, and a 50% chance of producing a bison.-->
+				</Other>
+			</Hare>
+			<Elephant>
+				<Other>
 					<Thrumbo>1</Thrumbo>
 					<Cat>9</Cat>
-				</value>
-			</li>
+					<!--10% chance of a thrumbo, 90% chance of a cat.-->
+				</Other>
+			</Elephant>
 		</value>
 	</Operation>
 
