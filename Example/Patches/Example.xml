@@ -13,6 +13,7 @@
 	</Operation>
 
 	<!--Add outcomes via patch.-->
+	<!--Note: This example only affects the offspring of hens. If a rooster were to fertilize one of the other animals listed here, it would use vanilla behaviour, as the mod only checks the mother for the ModExtension.-->
 	<Operation Class="PatchOperationAdd">
 		<xpath>Defs/PawnKindDef[defName="Chicken"]/modExtensions/li[@Class="DZY.Crossbreeding.Extension"]/outcomes</xpath>
 		<value>
