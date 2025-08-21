@@ -375,17 +375,14 @@ namespace DZY.CrossBreeding
             [HarmonyPostfix]
             public static void ProduceEgg_Postfix(CompEggLayer __instance, Thing __result)
             {
-                if (__instance.GetType().ToString() != "CompCrossbredEggLayer")
+                GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
+                CompParentKindDef comp1 = __result.TryGetComp<CompParentKindDef>();
+                if (comp1 != null)
                 {
-                    GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
-                    CompParentKindDef comp1 = __result.TryGetComp<CompParentKindDef>();
-                    if (comp1 != null)
-                    {
-                        comp1.fatherKindDef = component.dict.TryGetValue(__instance.parent.thingIDNumber);
-                        Pawn mother = __instance.parent as Pawn;
-                        comp1.motherKindDef = mother.kindDef;
-                        component.dict.Remove(__instance.parent.thingIDNumber);
-                    }
+                    comp1.fatherKindDef = component.dict.TryGetValue(__instance.parent.thingIDNumber);
+                    Pawn mother = __instance.parent as Pawn;
+                    comp1.motherKindDef = mother.kindDef;
+                    component.dict.Remove(__instance.parent.thingIDNumber);
                 }
             }
         }
