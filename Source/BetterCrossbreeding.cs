@@ -361,11 +361,7 @@ namespace DZY.CrossBreeding
         public static void Fertilize_Postfix(CompEggLayer __instance, Pawn male)
         {
             GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
-            if (!component.dict.ContainsKey(__instance.parent.thingIDNumber))
-            {
-                component.dict.Add(__instance.parent.thingIDNumber, male.kindDef);
-            }
-        
+            component.dict.AddDistinct(__instance.parent.thingIDNumber, male.kindDef);
         }
 
 
