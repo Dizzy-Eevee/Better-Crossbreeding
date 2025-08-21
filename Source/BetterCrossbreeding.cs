@@ -360,9 +360,12 @@ namespace DZY.CrossBreeding
         [HarmonyPostfix]
         public static void Fertilize_Postfix(CompEggLayer __instance, Pawn male)
         {
-
             GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
-            component.dict.Add(__instance.parent.thingIDNumber, male.kindDef);
+            if (!component.dict.ContainsKey(__instance.parent.thingIDNumber))
+            {
+                component.dict.Add(__instance.parent.thingIDNumber, male.kindDef);
+            }
+        
         }
 
 
@@ -372,14 +375,17 @@ namespace DZY.CrossBreeding
             [HarmonyPostfix]
             public static void ProduceEgg_Postfix(CompEggLayer __instance, Thing __result)
             {
-                GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
-                CompParentKindDef comp1 = __result.TryGetComp<CompParentKindDef>();
-                if (comp1 != null)
+                if (__instance.GetType().ToString() != "CompCrossbredEggLayer")
                 {
-                    comp1.fatherKindDef = component.dict.TryGetValue(__instance.parent.thingIDNumber);
-                    Pawn mother = __instance.parent as Pawn;
-                    comp1.motherKindDef = mother.kindDef;
-                    component.dict.Remove(__instance.parent.thingIDNumber);
+                    GameComponentBreedingDictionary component = Current.Game.GetComponent<GameComponentBreedingDictionary>();
+                    CompParentKindDef comp1 = __result.TryGetComp<CompParentKindDef>();
+                    if (comp1 != null)
+                    {
+                        comp1.fatherKindDef = component.dict.TryGetValue(__instance.parent.thingIDNumber);
+                        Pawn mother = __instance.parent as Pawn;
+                        comp1.motherKindDef = mother.kindDef;
+                        component.dict.Remove(__instance.parent.thingIDNumber);
+                    }
                 }
             }
         }
